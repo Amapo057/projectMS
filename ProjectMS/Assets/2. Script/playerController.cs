@@ -9,11 +9,12 @@ public class playerController : MonoBehaviour
     private Rigidbody rb;
     private Animator animator;
     private Vector2 inputWalk;
-    
-    
 
+    private bool rightDirection = true;
     public float moveSpeed = 3f;
-    bool walk = false;
+    private bool walkState = false;
+
+    private Clock walkTime;
 
     void Awake()
     {
@@ -32,7 +33,7 @@ public class playerController : MonoBehaviour
         // Rigidbody와 Animator 컴포넌트 가져오기
         rb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
-
+        walkTime = new Clock();
     }
     void OnDisable()
     {
@@ -47,16 +48,44 @@ public class playerController : MonoBehaviour
         inputWalk = inputActions.playerAction.walk.ReadValue<Vector2>();
         // magnitude로 벡터값 확인
         float inputMagnitude = inputWalk.magnitude;
-        animator.SetFloat("playerMoveSpeed", inputMagnitude);
+        animator.SetFloat("playerWalkSpeed", inputMagnitude);
+
+        if (inputMagnitude != 0)
+        {
+            if (!walkState)
+            {
+                walkTime.StartTime();
+                walkState = true;
+                animator.SetBool("playerWalkState", true);
+            }
+        }
+            
+        if (walkState)
+        {
+            if (inputMagnitude == 0)
+            {
+                if (walkTime.TimeUp(0.2f))
+                {
+                    walkState = false;
+                    animator.SetBool("playerWalkState", false);
+                }
+            }
+        }
 
         //좌우 반전
-        if (inputWalk.x > 0)
+        Vector3 currentScale = transform.localScale;
+
+        if (inputWalk.x > 0 && !rightDirection)
         {
-            transform.localScale = new Vector3(1, 1, 1);
+            rightDirection = true;
+            currentScale.x *= -1;
+            transform.localScale = currentScale;
         }
-        else if (inputWalk.x < 0)
+        else if (inputWalk.x < 0 && rightDirection)
         {
-            transform.localScale = new Vector3(-1, 1, 1);
+            rightDirection = false;
+            currentScale.x *= -1;
+            transform.localScale = currentScale;
         }
     }
     void FixedUpdate()
@@ -67,6 +96,7 @@ public class playerController : MonoBehaviour
 
             Vector3 moveDirection = new Vector3(inputWalk.x, 0f, inputWalk.y);
             Vector3 targetVelocity = moveDirection.normalized * moveSpeed;
+            targetVelocity.z *= 1.5f;
 
             // 현재 Rigidbody의 Y축 속도는 그대로 유지하면서 XZ 평면의 속도만 변경
             // (이렇게 하면 나중에 점프나 중력 같은 Y축 움직임을 추가했을 때 서로 간섭하지 않아.)
@@ -75,4 +105,27 @@ public class playerController : MonoBehaviour
             rb.velocity = targetVelocity;
         }
     }
+
+
 }
+public class Clock
+{
+    private float saveTime = 0f;
+
+    public void StartTime()
+    {
+        saveTime = 0f;
+    }
+
+    public bool TimeUp(float aimTime)
+    {
+        saveTime += Time.deltaTime;
+
+        if (saveTime >= aimTime)
+        {
+            return true;
+        }
+        return false;
+    }
+}
+
