@@ -9,11 +9,10 @@ public class playerController : MonoBehaviour
     private Rigidbody rb;
     private Animator animator;
     private Vector2 inputWalk;
+    private Vector2 playerDirection;
 
     private bool rightDirection = true;
     public float moveSpeed = 3f;
-    private bool walkState = false;
-
     private Clock walkTime;
 
     void Awake()
@@ -46,47 +45,36 @@ public class playerController : MonoBehaviour
     {
         // inputWalk에 inputAction으로 받은 입력값 저장
         inputWalk = inputActions.playerAction.walk.ReadValue<Vector2>();
+
         // magnitude로 벡터값 확인
         float inputMagnitude = inputWalk.magnitude;
         animator.SetFloat("playerWalkSpeed", inputMagnitude);
 
         if (inputMagnitude != 0)
         {
-            if (!walkState)
-            {
-                walkTime.StartTime();
-                walkState = true;
-                animator.SetBool("playerWalkState", true);
-            }
+            playerDirection = inputWalk;
+            animator.SetFloat("playerDirectionX", playerDirection.x);
+            animator.SetFloat("playerDirectionY", playerDirection.y);
         }
-            
-        if (walkState)
-        {
-            if (inputMagnitude == 0)
-            {
-                if (walkTime.TimeUp(0.2f))
-                {
-                    walkState = false;
-                    animator.SetBool("playerWalkState", false);
-                }
-            }
-        }
+
+        //Debug.Log("Input for Animation: X=" + inputWalk.x + ", Y=" + inputWalk.y + ", Magnitude=" + inputWalk.magnitude);
+        Debug.Log("Direction: X=" + playerDirection.x + ", Y=" + playerDirection.y );
 
         //좌우 반전
-        Vector3 currentScale = transform.localScale;
+        // Vector3 currentScale = transform.localScale;
 
-        if (inputWalk.x > 0 && !rightDirection)
-        {
-            rightDirection = true;
-            currentScale.x *= -1;
-            transform.localScale = currentScale;
-        }
-        else if (inputWalk.x < 0 && rightDirection)
-        {
-            rightDirection = false;
-            currentScale.x *= -1;
-            transform.localScale = currentScale;
-        }
+        // if (inputWalk.x > 0 && !rightDirection)
+        // {
+        //     rightDirection = true;
+        //     currentScale.x *= -1;
+        //     transform.localScale = currentScale;
+        // }
+        // else if (inputWalk.x < 0 && rightDirection)
+        // {
+        //     rightDirection = false;
+        //     currentScale.x *= -1;
+        //     transform.localScale = currentScale;
+        // }
     }
     void FixedUpdate()
     {
