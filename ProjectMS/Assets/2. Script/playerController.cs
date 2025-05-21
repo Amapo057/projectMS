@@ -11,6 +11,7 @@ public class playerController : MonoBehaviour
     private Animator animator;
     private Vector2 inputWalk;
     private Vector2 playerDirection;
+    private SpriteRenderer spriteRenderer;
 
     public GameObject attackHitBox;
     public Transform hitboxController;
@@ -36,6 +37,10 @@ public class playerController : MonoBehaviour
         // Rigidbody와 Animator 컴포넌트 가져오기
         rb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
+        
+        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        spriteRenderer.receiveShadows=true; 
+        spriteRenderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.TwoSided;
     }
     void OnDisable()
     {
