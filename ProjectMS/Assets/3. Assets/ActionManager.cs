@@ -35,6 +35,15 @@ public partial class @ActionManager: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
+                },
+                {
+                    ""name"": ""attack"",
+                    ""type"": ""Button"",
+                    ""id"": ""dfaeadbb-e8a5-482a-b3ac-56dff5395111"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -103,6 +112,17 @@ public partial class @ActionManager: IInputActionCollection2, IDisposable
                     ""action"": ""walk"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7183ea0b-f320-449f-b9a8-57223cb1c723"",
+                    ""path"": ""<Mouse>/leftButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""attack"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -112,6 +132,7 @@ public partial class @ActionManager: IInputActionCollection2, IDisposable
         // playerAction
         m_playerAction = asset.FindActionMap("playerAction", throwIfNotFound: true);
         m_playerAction_walk = m_playerAction.FindAction("walk", throwIfNotFound: true);
+        m_playerAction_attack = m_playerAction.FindAction("attack", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -174,11 +195,13 @@ public partial class @ActionManager: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_playerAction;
     private List<IPlayerActionActions> m_PlayerActionActionsCallbackInterfaces = new List<IPlayerActionActions>();
     private readonly InputAction m_playerAction_walk;
+    private readonly InputAction m_playerAction_attack;
     public struct PlayerActionActions
     {
         private @ActionManager m_Wrapper;
         public PlayerActionActions(@ActionManager wrapper) { m_Wrapper = wrapper; }
         public InputAction @walk => m_Wrapper.m_playerAction_walk;
+        public InputAction @attack => m_Wrapper.m_playerAction_attack;
         public InputActionMap Get() { return m_Wrapper.m_playerAction; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -191,6 +214,9 @@ public partial class @ActionManager: IInputActionCollection2, IDisposable
             @walk.started += instance.OnWalk;
             @walk.performed += instance.OnWalk;
             @walk.canceled += instance.OnWalk;
+            @attack.started += instance.OnAttack;
+            @attack.performed += instance.OnAttack;
+            @attack.canceled += instance.OnAttack;
         }
 
         private void UnregisterCallbacks(IPlayerActionActions instance)
@@ -198,6 +224,9 @@ public partial class @ActionManager: IInputActionCollection2, IDisposable
             @walk.started -= instance.OnWalk;
             @walk.performed -= instance.OnWalk;
             @walk.canceled -= instance.OnWalk;
+            @attack.started -= instance.OnAttack;
+            @attack.performed -= instance.OnAttack;
+            @attack.canceled -= instance.OnAttack;
         }
 
         public void RemoveCallbacks(IPlayerActionActions instance)
@@ -218,5 +247,6 @@ public partial class @ActionManager: IInputActionCollection2, IDisposable
     public interface IPlayerActionActions
     {
         void OnWalk(InputAction.CallbackContext context);
+        void OnAttack(InputAction.CallbackContext context);
     }
 }

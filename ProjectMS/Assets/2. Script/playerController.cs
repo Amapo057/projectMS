@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class playerController : MonoBehaviour
@@ -11,10 +12,11 @@ public class playerController : MonoBehaviour
     private Vector2 inputWalk;
     private Vector2 playerDirection;
 
-    private bool rightDirection = true;
-    public float moveSpeed = 3f;
-    private Clock walkTime;
+    public GameObject attackHitBox;
+    public Transform hitboxController;
 
+    public float moveSpeed = 2f;
+    private bool isAttack = false;
     void Awake()
     {
         // inputActions 불러오기
@@ -24,6 +26,8 @@ public class playerController : MonoBehaviour
     {
         // inputActions 활성화
         inputActions.playerAction.Enable();
+
+        inputActions.playerAction.attack.performed += OnAttack;
     }
     void Start()
     {
@@ -32,12 +36,13 @@ public class playerController : MonoBehaviour
         // Rigidbody와 Animator 컴포넌트 가져오기
         rb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
-        walkTime = new Clock();
     }
     void OnDisable()
     {
         // inputActions 비활성화
         inputActions.playerAction.Disable();
+
+        inputActions.playerAction.attack.performed -= OnAttack;
     }
 
     // Update is called once per frame
@@ -46,40 +51,45 @@ public class playerController : MonoBehaviour
         // inputWalk에 inputAction으로 받은 입력값 저장
         inputWalk = inputActions.playerAction.walk.ReadValue<Vector2>();
 
+        //히트박스 방향 전환
+        Vector3 currentScale = transform.localScale;
+
         // magnitude로 벡터값 확인
         float inputMagnitude = inputWalk.magnitude;
         animator.SetFloat("playerWalkSpeed", inputMagnitude);
-
-        if (inputMagnitude != 0)
+        
+        if (!isAttack)
         {
-            playerDirection = inputWalk;
-            animator.SetFloat("playerDirectionX", playerDirection.x);
-            animator.SetFloat("playerDirectionY", playerDirection.y);
+            if (inputMagnitude != 0)
+            {
+                playerDirection = inputWalk;
+                animator.SetFloat("playerDirectionX", playerDirection.x);
+                animator.SetFloat("playerDirectionY", playerDirection.y);
+
+                if (inputWalk.x > 0)
+                {
+                    hitboxController.localRotation = Quaternion.Euler(0, 0, 0);
+                }
+                else if (inputWalk.x < 0)
+                {
+                    hitboxController.rotation = Quaternion.Euler(0, -180, 0);
+                }
+                else if (inputWalk.y != 0)
+                {
+                    hitboxController.localRotation = Quaternion.Euler(0, -inputWalk.y * 90, 0);
+                }
+            }
         }
+        
+        
 
-        //Debug.Log("Input for Animation: X=" + inputWalk.x + ", Y=" + inputWalk.y + ", Magnitude=" + inputWalk.magnitude);
-        Debug.Log("Direction: X=" + playerDirection.x + ", Y=" + playerDirection.y );
 
-        //좌우 반전
-        // Vector3 currentScale = transform.localScale;
-
-        // if (inputWalk.x > 0 && !rightDirection)
-        // {
-        //     rightDirection = true;
-        //     currentScale.x *= -1;
-        //     transform.localScale = currentScale;
-        // }
-        // else if (inputWalk.x < 0 && rightDirection)
-        // {
-        //     rightDirection = false;
-        //     currentScale.x *= -1;
-        //     transform.localScale = currentScale;
-        // }
     }
+
     void FixedUpdate()
     {
 
-        if (rb != null)
+        if (!isAttack)
         {
 
             Vector3 moveDirection = new Vector3(inputWalk.x, 0f, inputWalk.y);
@@ -93,9 +103,31 @@ public class playerController : MonoBehaviour
             rb.velocity = targetVelocity;
         }
     }
+    private void OnAttack(InputAction.CallbackContext context)
+    {
+        if (!isAttack)
+        {
+            animator.SetTrigger("playerAttack");
+        }
+        
+        isAttack = true;
 
+    }
+    public void AttackFinish()
+    {
+        isAttack = false;
+    }
 
+    public void HitboxActive()
+    {
+        attackHitBox.SetActive(true);
+    }
+    public void HitboxInactive()
+    {
+        attackHitBox.SetActive(false);
+    }
 }
+
 public class Clock
 {
     private float saveTime = 0f;
